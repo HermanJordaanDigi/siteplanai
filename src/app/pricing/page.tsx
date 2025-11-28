@@ -1,13 +1,51 @@
 "use client";
 
 import { useState } from "react";
-import { PricingCard } from "@/components/pricing-card";
+import { PricingCard, type PricingTier } from "@/components/pricing-card";
 import { BuyCreditsModal } from "@/components/credits/buy-credits-modal";
-import { getPricingTiers, type PricingTier } from "@/lib/mock-data";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
+const pricingTiers: PricingTier[] = [
+  {
+    name: "Basic",
+    price: 29,
+    credits: 10,
+    features: [
+      "10 site plan generations",
+      "Standard quality output",
+      "Email support",
+      "Credits never expire",
+    ],
+  },
+  {
+    name: "Pro",
+    price: 79,
+    credits: 30,
+    popular: true,
+    features: [
+      "30 site plan generations",
+      "High quality output",
+      "Priority email support",
+      "Credits never expire",
+      "Advanced customization",
+    ],
+  },
+  {
+    name: "Elite",
+    price: 199,
+    credits: 100,
+    features: [
+      "100 site plan generations",
+      "Premium quality output",
+      "24/7 priority support",
+      "Credits never expire",
+      "Advanced customization",
+      "Bulk generation",
+    ],
+  },
+];
+
 export default function PricingPage() {
-  const pricingTiers = getPricingTiers();
   const [selectedTier, setSelectedTier] = useState<PricingTier | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -19,11 +57,6 @@ export default function PricingPage() {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedTier(null);
-  };
-
-  const handlePurchaseSuccess = () => {
-    // Refresh the page or update state to reflect new credits
-    window.location.reload();
   };
 
   return (
@@ -137,7 +170,6 @@ export default function PricingPage() {
         isOpen={isModalOpen}
         onClose={handleModalClose}
         selectedTier={selectedTier}
-        onSuccess={handlePurchaseSuccess}
       />
     </div>
   );

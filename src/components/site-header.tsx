@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserProfile } from "@/components/auth/user-profile";
 import { ModeToggle } from "./ui/mode-toggle";
-import { CreditDisplay } from "@/components/credits/credit-display";
 import { MapPin, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -68,7 +67,6 @@ export function SiteHeader() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <CreditDisplay compact />
             <UserProfile />
             <ModeToggle />
           </div>
@@ -108,7 +106,6 @@ export function SiteHeader() {
               ))}
             </nav>
             <div className="flex items-center gap-4 px-2 pt-2 border-t">
-              <CreditDisplay compact />
               <div className="ml-auto flex items-center gap-2">
                 <UserProfile />
                 <ModeToggle />

@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { APIProvider } from "@vis.gl/react-google-maps";
-import usePlacesAutocomplete, {
-  getGeocode,
-  getLatLng,
-} from "use-places-autocomplete";
+/// <reference types="@types/google.maps" />
+
+import { useState, useEffect, useCallback } from "react";
+import { APIProvider, useMapsLibrary } from "@vis.gl/react-google-maps";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -18,48 +16,134 @@ interface AddressAutocompleteProps {
   className?: string;
 }
 
+interface PlacePrediction {
+  placePrediction: {
+    placeId: string;
+    text: {
+      text: string;
+    };
+    structuredFormat: {
+      mainText: {
+        text: string;
+      };
+      secondaryText?: {
+        text: string;
+      };
+    };
+  };
+}
+
 function AddressAutocompleteInner({
   onAddressSelect,
   className,
 }: Omit<AddressAutocompleteProps, "apiKey">) {
-  const {
-    ready,
-    value,
-    suggestions: { status, data },
-    setValue,
-    clearSuggestions,
-  } = usePlacesAutocomplete({
-    requestOptions: {
-      /* Define search options here */
-    },
-    debounce: 300,
-  });
+  const placesLibrary = useMapsLibrary("places");
+  const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
+  const [inputValue, setInputValue] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
+  const fetchPredictions = useCallback(async (input: string) => {
+    if (!input.trim()) {
+      setPredictions([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Call our API route which uses the new Places API
+      const response = await fetch("/api/places/autocomplete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ input }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch predictions");
+      }
+
+      const data = await response.json();
+      setPredictions(data.suggestions || []);
+    } catch (error) {
+      console.error("Error fetching predictions:", error);
+      setPredictions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!inputValue.trim()) {
+      setPredictions([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      fetchPredictions(inputValue);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [inputValue, fetchPredictions]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
     setShowSuggestions(true);
   };
 
-  const handleSelect = async (description: string) => {
-    setValue(description, false);
-    clearSuggestions();
+  const handleSelect = async (placeId: string, description: string) => {
+    setInputValue(description);
     setShowSuggestions(false);
+    setPredictions([]);
 
     try {
-      const results = await getGeocode({ address: description });
-      const { lat, lng } = getLatLng(results[0]);
-      onAddressSelect(description, lat, lng);
+      // Call our API route to get place details
+      const response = await fetch("/api/places/details", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ placeId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch place details");
+      }
+
+      const place = await response.json();
+
+      if (place.location) {
+        const lat = place.location.latitude;
+        const lng = place.location.longitude;
+        const address = place.formattedAddress || description;
+        onAddressSelect(address, lat, lng);
+      }
     } catch (error) {
-      console.error("Error getting geocode:", error);
+      console.error("Error selecting place:", error);
     }
   };
 
   const handleClear = () => {
-    setValue("");
-    clearSuggestions();
+    setInputValue("");
+    setPredictions([]);
     setShowSuggestions(false);
   };
+
+  if (!placesLibrary) {
+    return (
+      <div className={cn("relative w-full", className)}>
+        <Label htmlFor="address-input">Property Address</Label>
+        <div className="mt-2">
+          <Input
+            id="address-input"
+            disabled
+            placeholder="Loading Google Maps..."
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("relative w-full", className)}>
@@ -67,14 +151,14 @@ function AddressAutocompleteInner({
       <div className="relative mt-2">
         <Input
           id="address-input"
-          value={value}
-          onChange={handleInput}
+          value={inputValue || ""}
+          onChange={handleInputChange}
           onFocus={() => setShowSuggestions(true)}
-          disabled={!ready}
           placeholder="Enter a property address..."
           className="pr-10"
+          disabled={isLoading}
         />
-        {value && (
+        {inputValue && (
           <Button
             type="button"
             variant="ghost"
@@ -87,25 +171,25 @@ function AddressAutocompleteInner({
         )}
       </div>
 
-      {status === "OK" && showSuggestions && (
+      {predictions.length > 0 && showSuggestions && (
         <div className="absolute z-10 mt-1 w-full rounded-md border bg-popover shadow-lg">
           <ul className="max-h-60 overflow-auto py-1">
-            {data.map((suggestion) => {
-              const {
-                place_id,
-                structured_formatting: { main_text, secondary_text },
-              } = suggestion;
-
+            {predictions.map((suggestion) => {
+              const { placeId, text, structuredFormat } = suggestion.placePrediction;
               return (
                 <li
-                  key={place_id}
+                  key={placeId}
                   className="cursor-pointer px-4 py-2 hover:bg-accent text-sm"
-                  onClick={() => handleSelect(suggestion.description)}
+                  onClick={() => handleSelect(placeId, text.text)}
                 >
-                  <div className="font-medium">{main_text}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {secondary_text}
+                  <div className="font-medium">
+                    {structuredFormat.mainText.text}
                   </div>
+                  {structuredFormat.secondaryText && (
+                    <div className="text-xs text-muted-foreground">
+                      {structuredFormat.secondaryText.text}
+                    </div>
+                  )}
                 </li>
               );
             })}

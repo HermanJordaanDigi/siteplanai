@@ -9,7 +9,6 @@ import { AddressAutocomplete } from "@/components/site-plans/address-autocomplet
 import { InteractiveMap } from "@/components/site-plans/interactive-map";
 import { MapControls } from "@/components/site-plans/map-controls";
 import { toast } from "sonner";
-import { addSitePlan } from "@/lib/mock-data";
 
 export default function NewSitePlanPage() {
   const router = useRouter();
@@ -83,22 +82,11 @@ export default function NewSitePlanPage() {
       return;
     }
 
-    // Create new site plan
-    const newPlan = {
-      id: `sp_${Date.now()}`,
-      userId: "demo_user",
-      address,
-      lat: location.lat,
-      lng: location.lng,
-      status: "draft" as const,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      thumbnailUrl: "https://placehold.co/300x200/e2e8f0/64748b?text=Draft",
-      generatedImageUrl: null,
-    };
-
-    addSitePlan(newPlan);
-    toast.success("Site plan saved as draft!");
+    // In real implementation, this would save to the database
+    // For now, just show a message
+    toast.info("Site plan creation coming soon", {
+      description: "Database integration will be available in a future update.",
+    });
 
     // Navigate to gallery or dashboard
     setTimeout(() => {
@@ -107,7 +95,7 @@ export default function NewSitePlanPage() {
   };
 
   return (
-    <div className="container py-8">
+    <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <Link href="/dashboard">
           <Button variant="ghost" size="sm" className="mb-4">

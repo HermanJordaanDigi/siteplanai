@@ -11,10 +11,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useDemoMode } from "@/contexts/demo-mode-context";
-import { updateUserCredits } from "@/lib/mock-data";
 import { toast } from "sonner";
-import type { PricingTier } from "@/lib/mock-data";
+
+interface PricingTier {
+  name: string;
+  credits: number;
+  price: number;
+}
 
 interface BuyCreditsModalProps {
   isOpen: boolean;
@@ -27,10 +30,8 @@ export function BuyCreditsModal({
   isOpen,
   onClose,
   selectedTier,
-  onSuccess,
 }: BuyCreditsModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { isDemoMode } = useDemoMode();
 
   const handlePurchase = async () => {
     if (!selectedTier) return;
@@ -40,21 +41,9 @@ export function BuyCreditsModal({
     // Simulate payment processing
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    if (isDemoMode) {
-      // Add credits to mock user balance
-      updateUserCredits(selectedTier.credits);
-
-      toast.success("Credits purchased successfully!", {
-        description: `${selectedTier.credits} credits have been added to your account.`,
-      });
-
-      onSuccess?.();
-      onClose();
-    } else {
-      toast.info("Real payments coming soon", {
-        description: "Payment integration will be available in a future update.",
-      });
-    }
+    toast.info("Real payments coming soon", {
+      description: "Payment integration will be available in a future update.",
+    });
 
     setIsProcessing(false);
   };
@@ -88,15 +77,6 @@ export function BuyCreditsModal({
               immediately after payment is processed.
             </p>
           </div>
-
-          {isDemoMode && (
-            <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-              <p className="text-sm text-amber-800 dark:text-amber-200">
-                Demo Mode: This is a simulated purchase. Credits will be added
-                to your in-memory balance.
-              </p>
-            </div>
-          )}
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
