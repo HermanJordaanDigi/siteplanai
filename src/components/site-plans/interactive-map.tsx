@@ -7,30 +7,48 @@ import { cn } from "@/lib/utils";
 interface InteractiveMapProps {
   apiKey: string;
   center: { lat: number; lng: number };
-  zoom?: number;
-  onMapChange?: (center: { lat: number; lng: number }, zoom: number) => void;
+  zoom: number;
+  heading?: number;
+  tilt?: number;
+  onMapChange?: (
+    center: { lat: number; lng: number },
+    zoom: number,
+    heading: number,
+    tilt: number
+  ) => void;
   className?: string;
 }
 
 export function InteractiveMap({
   apiKey,
   center,
-  zoom = 18,
+  zoom,
+  heading = 0,
+  tilt = 0,
   onMapChange,
   className,
 }: InteractiveMapProps) {
   const [mapTypeId] = useState<"satellite" | "roadmap">("satellite");
 
   const handleCameraChange = useCallback(
-    (ev: { detail: { center: { lat: number; lng: number }; zoom: number } }) => {
+    (ev: {
+      detail: {
+        center: { lat: number; lng: number };
+        zoom: number;
+        heading: number;
+        tilt: number;
+      };
+    }) => {
       const newCenter = {
         lat: ev.detail.center.lat,
         lng: ev.detail.center.lng,
       };
       const newZoom = ev.detail.zoom;
+      const newHeading = ev.detail.heading;
+      const newTilt = ev.detail.tilt;
 
       if (onMapChange) {
-        onMapChange(newCenter, newZoom);
+        onMapChange(newCenter, newZoom, newHeading, newTilt);
       }
     },
     [onMapChange]
@@ -52,11 +70,16 @@ export function InteractiveMap({
           <Map
             defaultCenter={center}
             defaultZoom={zoom}
+            center={center}
+            zoom={zoom}
+            heading={heading}
+            tilt={tilt}
             mapId="site-plan-map"
             mapTypeId={mapTypeId}
             disableDefaultUI={true}
             onCameraChanged={handleCameraChange}
             gestureHandling="greedy"
+            reuseMaps={true}
           >
             <AdvancedMarker position={center} />
           </Map>
