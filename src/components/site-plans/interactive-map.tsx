@@ -4,8 +4,9 @@ import { useState, useCallback } from "react";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 import { cn } from "@/lib/utils";
 
-interface InteractiveMapProps {
+export interface InteractiveMapProps {
   apiKey: string;
+  mapId?: string;
   center: { lat: number; lng: number };
   zoom: number;
   heading?: number;
@@ -21,6 +22,7 @@ interface InteractiveMapProps {
 
 export function InteractiveMap({
   apiKey,
+  mapId,
   center,
   zoom,
   heading = 0,
@@ -72,12 +74,13 @@ export function InteractiveMap({
             zoom={zoom}
             heading={heading}
             tilt={tilt}
-            mapId="site-plan-map"
+            mapId={mapId || "site-plan-map"}
             mapTypeId={mapTypeId}
             disableDefaultUI={true}
             onCameraChanged={handleCameraChange}
             gestureHandling="greedy"
             reuseMaps={true}
+            renderingType="VECTOR"
           >
             <AdvancedMarker position={center} />
           </Map>

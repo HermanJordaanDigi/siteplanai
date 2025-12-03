@@ -228,6 +228,7 @@ export default function NewSitePlanPage() {
                 <>
                   <InteractiveMap
                     apiKey={apiKey}
+                    mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
                     center={location}
                     zoom={zoom}
                     heading={heading}
