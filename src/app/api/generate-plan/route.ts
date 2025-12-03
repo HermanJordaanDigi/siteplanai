@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { address, lat, lng, zoom, heading, tilt, image, prompt: userPrompt } = await request.json();
+    const { address, lat, lng, zoom, image, prompt: userPrompt } = await request.json();
 
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     const geminiApiKey = process.env.GEMINI_API_KEY;

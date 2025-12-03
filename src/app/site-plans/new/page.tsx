@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Camera, Save, RefreshCw, Download } from "lucide-react";
-import Link from "next/link";
+import { Camera, Save, RefreshCw, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,7 +9,6 @@ import { AddressAutocomplete } from "@/components/site-plans/address-autocomplet
 import { InteractiveMap } from "@/components/site-plans/interactive-map";
 import { MapControls } from "@/components/site-plans/map-controls";
 import { toast } from "sonner";
-import Image from "next/image";
 
 import { Textarea } from "@/components/ui/textarea";
 
@@ -250,9 +248,10 @@ export default function NewSitePlanPage() {
               {generatedImage ? (
                 <div className="relative w-full h-full min-h-[500px] flex flex-col">
                   <div className="relative flex-1 bg-muted/20 rounded-lg border border-dashed border-muted overflow-hidden">
-                    <img 
-                      src={generatedImage} 
-                      alt="Generated Site Plan" 
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={generatedImage}
+                      alt="Generated Site Plan"
                       className="w-full h-full object-contain"
                     />
                   </div>
@@ -356,9 +355,10 @@ export default function NewSitePlanPage() {
               {!generatedImage && capturedScreenshot && (
                 <div className="space-y-3">
                   <div className="relative w-full h-32 bg-muted rounded-md overflow-hidden border">
-                    <img 
-                      src={capturedScreenshot} 
-                      alt="Captured screenshot" 
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={capturedScreenshot}
+                      alt="Captured screenshot"
                       className="w-full h-full object-contain"
                     />
                   </div>
@@ -429,8 +429,8 @@ export default function NewSitePlanPage() {
               <li>Search for a property address.</li>
               <li>Adjust the map view (zoom, rotate) to frame the property.</li>
               <li>Take a screenshot of the map and paste/upload it.</li>
-              <li>Click "Generate Site Plan" to create the architectural drawing.</li>
-              <li>Use the text box to refine the result (e.g., "Add a pool").</li>
+              <li>Click &quot;Generate Site Plan&quot; to create the architectural drawing.</li>
+              <li>Use the text box to refine the result (e.g., &quot;Add a pool&quot;).</li>
               <li>Download the final image.</li>
             </ol>
           </Card>
