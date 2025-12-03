@@ -68,8 +68,6 @@ export function InteractiveMap({
       ) : (
         <APIProvider apiKey={apiKey}>
           <Map
-            defaultCenter={center}
-            defaultZoom={zoom}
             center={center}
             zoom={zoom}
             heading={heading}

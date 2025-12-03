@@ -45,7 +45,7 @@ export default function NewSitePlanPage() {
   };
 
   const handleZoomIn = () => {
-    setZoom((prev) => Math.min(prev + 1, 22));
+    setZoom((prev) => Math.min(prev + 1, 23)); // Increased to 23 for closer views
     setGeneratedImage(null);
   };
 

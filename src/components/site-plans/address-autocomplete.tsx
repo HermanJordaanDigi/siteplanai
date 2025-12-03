@@ -151,7 +151,7 @@ function AddressAutocompleteInner({
       <div className="relative mt-2">
         <Input
           id="address-input"
-          value={inputValue || ""}
+          value={inputValue}
           onChange={handleInputChange}
           onFocus={() => setShowSuggestions(true)}
           placeholder="Enter a property address..."
