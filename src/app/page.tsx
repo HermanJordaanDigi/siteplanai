@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BeforeAfterSlider } from "@/components/ui/before-after-slider";
 import { MapPin, Bot, Ruler, Save, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export default function Home() {
@@ -34,9 +35,12 @@ export default function Home() {
               </div>
             </div>
             <div className="relative hidden lg:block">
-              <div className="aspect-[4/3] rounded-lg border bg-muted/50 flex items-center justify-center">
-                <MapPin className="h-24 w-24 text-muted-foreground/40" />
-              </div>
+              <BeforeAfterSlider
+                beforeImage="/before.jpg"
+                afterImage="/after.png"
+                beforeLabel="Satellite View"
+                afterLabel="Site Plan"
+              />
             </div>
           </div>
         </div>

@@ -24,11 +24,18 @@ export async function POST(request: Request) {
       const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=640x640&maptype=satellite&key=${apiKey}`;
 
       console.log("Fetching static map from:", staticMapUrl);
-      const mapResponse = await fetch(staticMapUrl);
+      let mapResponse = await fetch(staticMapUrl);
       
+      // Fallback to roadmap if satellite is not available (e.g. 403 Forbidden in some regions)
+      if (!mapResponse.ok) {
+        console.warn(`Failed to fetch satellite map (${mapResponse.status}). Retrying with roadmap...`);
+        const fallbackUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=640x640&maptype=roadmap&key=${apiKey}`;
+        mapResponse = await fetch(fallbackUrl);
+      }
+
       if (!mapResponse.ok) {
         const errorText = await mapResponse.text();
-        console.error("Failed to fetch static map:", mapResponse.statusText, errorText);
+        console.error("Failed to fetch static map (both satellite and roadmap):", mapResponse.statusText, errorText);
         return NextResponse.json(
           { error: "Failed to capture map view", details: `${mapResponse.statusText}: ${errorText}` },
           { status: 500 }
@@ -47,17 +54,37 @@ export async function POST(request: Request) {
     // 2. Call Gemini 3 Pro Image Preview
     const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
-    const defaultPrompt = `
-      Generate a professional architectural site plan based on this satellite image of ${address}.
-      
-      Requirements:
-      1. Create a top-down, scaled site plan.
-      2. Clearly define property boundaries, buildings, driveways, and pathways.
-      3. Use a professional architectural style (clean lines, blueprint or rendered style).
-      4. Include landscaping elements like trees and gardens where appropriate based on the image.
-      5. Maintain the orientation and scale of the original image.
-      6. The output should be a high-quality image suitable for presentation.
-    `;
+    const defaultPrompt = `You are an expert architectural draftsperson creating a professional site plan drawing.
+
+TASK: Transform this satellite/aerial image of the property at "${address}" into a precise architectural site plan drawing.
+
+CRITICAL INSTRUCTIONS:
+1. PRESERVE THE EXACT LAYOUT: Do not change, move, or reimagine any buildings, structures, or features. The site plan must match the satellite image exactly.
+2. This is an IMAGE EDITING task, not image generation. You are converting a photo into a technical drawing of the SAME property.
+3. Maintain the exact same viewing angle, orientation, and scale as the input image.
+
+REQUIRED ELEMENTS:
+- Property boundary lines (bold, clearly marked)
+- All existing buildings and structures (drawn with clean architectural lines)
+- Driveways, pathways, and paved areas (clearly delineated)
+- Landscaping features: trees (shown as circles with canopy diameter), gardens, lawns
+- Any pools, patios, decks, or outdoor structures
+
+STYLE SPECIFICATIONS:
+- Use clean, professional architectural line work (not sketchy or artistic)
+- Black lines on white background (traditional site plan style)
+- Use different line weights: thick for property boundaries, medium for buildings, thin for details
+- Include tree symbols (circles) for significant trees visible in the image
+- Add hatching or fill patterns to differentiate: buildings (solid), paved areas (crosshatch), grass/landscaping (stipple or light fill)
+
+WHAT TO AVOID:
+- Do NOT add features that aren't visible in the image
+- Do NOT change the building locations or sizes
+- Do NOT make it look like a rendered 3D view or artistic illustration
+- Do NOT add decorative elements or embellishments
+- Do NOT change the property orientation
+
+OUTPUT: A professional, presentation-ready architectural site plan that accurately represents the property shown in the satellite image, suitable for planning applications, real estate listings, or construction documentation.`;
 
     const finalPrompt = userPrompt || defaultPrompt;
 

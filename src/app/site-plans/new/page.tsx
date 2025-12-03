@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Camera, Save, RefreshCw, Download } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,8 +27,48 @@ export default function NewSitePlanPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [refinementPrompt, setRefinementPrompt] = useState("");
+  const [capturedScreenshot, setCapturedScreenshot] = useState<string | null>(null);
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+
+  // Handle paste event for screenshots
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const blob = items[i].getAsFile();
+          if (blob) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const result = event.target?.result as string;
+              setCapturedScreenshot(result);
+              toast.success("Screenshot pasted! Click 'Generate' to create your site plan.");
+            };
+            reader.readAsDataURL(blob);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, []);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setCapturedScreenshot(result);
+        toast.success("Image uploaded! Click 'Generate' to create your site plan.");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleAddressSelect = (
     selectedAddress: string,
@@ -104,6 +144,11 @@ export default function NewSitePlanPage() {
       return;
     }
 
+    if (!isRefinement && !capturedScreenshot) {
+      toast.error("Please capture a screenshot of the map first");
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
@@ -114,7 +159,7 @@ export default function NewSitePlanPage() {
         zoom,
         heading,
         tilt,
-        image: isRefinement ? generatedImage : undefined,
+        image: isRefinement ? generatedImage : capturedScreenshot,
         prompt: isRefinement ? refinementPrompt : undefined,
       };
 
@@ -273,16 +318,69 @@ export default function NewSitePlanPage() {
           <Card className="p-4">
             <h2 className="text-lg font-semibold mb-4">Actions</h2>
             <div className="flex flex-col gap-3">
-              {!generatedImage && (
-                <Button
-                  size="lg"
-                  onClick={() => handleGenerate(false)}
-                  disabled={!address || isGenerating}
-                  className="w-full"
-                >
-                  <Camera className="mr-2 h-5 w-5" />
-                  {isGenerating ? "Generating..." : "Capture & Generate"}
-                </Button>
+              {!generatedImage && !capturedScreenshot && (
+                <div className="space-y-3">
+                  <div className="p-3 bg-muted/50 rounded-md border border-dashed">
+                    <p className="text-sm font-medium mb-2">📸 Capture Screenshot:</p>
+                    <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                      <li>Adjust the map view above to show your property</li>
+                      <li>Take a screenshot:
+                        <ul className="ml-6 mt-1 space-y-0.5">
+                          <li>• Mac: Cmd+Shift+4, then select the map</li>
+                          <li>• Windows: Win+Shift+S, then select the map</li>
+                        </ul>
+                      </li>
+                      <li>Paste it here (Ctrl/Cmd+V) or upload below</li>
+                    </ol>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="screenshot-upload"
+                    />
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => document.getElementById('screenshot-upload')?.click()}
+                    >
+                      <Camera className="mr-2 h-4 w-4" />
+                      Upload Screenshot
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {!generatedImage && capturedScreenshot && (
+                <div className="space-y-3">
+                  <div className="relative w-full h-32 bg-muted rounded-md overflow-hidden border">
+                    <img 
+                      src={capturedScreenshot} 
+                      alt="Captured screenshot" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="lg"
+                      onClick={() => handleGenerate(false)}
+                      disabled={isGenerating}
+                      className="flex-1"
+                    >
+                      <Camera className="mr-2 h-5 w-5" />
+                      {isGenerating ? "Generating..." : "Generate Site Plan"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setCapturedScreenshot(null)}
+                      disabled={isGenerating}
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                </div>
               )}
 
               {generatedImage && (
@@ -330,8 +428,9 @@ export default function NewSitePlanPage() {
             <ol className="space-y-3 text-sm text-muted-foreground list-decimal list-inside">
               <li>Search for a property address.</li>
               <li>Adjust the map view (zoom, rotate) to frame the property.</li>
-              <li>Click &quot;Capture & Generate&quot; to create the site plan.</li>
-              <li>Use the text box to refine the result (e.g., &quot;Add a pool&quot;).</li>
+              <li>Take a screenshot of the map and paste/upload it.</li>
+              <li>Click "Generate Site Plan" to create the architectural drawing.</li>
+              <li>Use the text box to refine the result (e.g., "Add a pool").</li>
               <li>Download the final image.</li>
             </ol>
           </Card>

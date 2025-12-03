@@ -82,7 +82,7 @@ function AddressAutocompleteInner({
 
     const timeoutId = setTimeout(() => {
       fetchPredictions(inputValue);
-    }, 300);
+    }, 800);
 
     return () => clearTimeout(timeoutId);
   }, [inputValue, fetchPredictions]);
@@ -137,6 +137,7 @@ function AddressAutocompleteInner({
         <div className="mt-2">
           <Input
             id="address-input"
+            name="address"
             disabled
             placeholder="Loading Google Maps..."
           />
@@ -151,6 +152,7 @@ function AddressAutocompleteInner({
       <div className="relative mt-2">
         <Input
           id="address-input"
+          name="address"
           value={inputValue}
           onChange={handleInputChange}
           onFocus={() => setShowSuggestions(true)}
@@ -212,6 +214,7 @@ export function AddressAutocomplete({
         <div className="mt-2">
           <Input
             id="address-input"
+            name="address"
             disabled
             placeholder="Google Maps API Key Required"
           />
